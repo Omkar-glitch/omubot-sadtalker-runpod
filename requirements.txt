@@ -1,0 +1,38 @@
+fastapi==0.112.0
+uvicorn[standard]==0.30.3
+pydantic==2.8.2
+requests==2.32.3
+numpy==1.26.4
+Pillow==10.4.0
+opencv-python-headless==4.10.0.84
+ffmpeg-python==0.2.0
+
+# Torch is installed in Dockerfiles to match the CUDA base.
+# If running locally, install a Torch build that matches your CUDA.
+# Example (CUDA 12.1):
+#   pip install torch==2.1.2+cu121 torchvision==0.16.2+cu121 --extra-index-url https://download.pytorch.org/whl/cu121
+# Example (CUDA 11.7):
+#   pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 --extra-index-url https://download.pytorch.org/whl/cu117
+
+# SadTalker deps (close to upstream)
+face_alignment==1.3.5
+imageio==2.19.3
+imageio-ffmpeg==0.4.7
+librosa==0.9.2
+numba==0.58.1
+resampy==0.3.1
+pydub==0.25.1
+scipy==1.10.1
+kornia==0.6.8
+tqdm==4.66.4
+yacs==0.1.8
+pyyaml==6.0.1
+joblib==1.1.0
+scikit-image==0.19.3
+basicsr==1.4.2
+facexlib==0.3.0
+gfpgan==1.3.8
+gradio==4.44.0
+av==12.2.0
+safetensors==0.4.4
+google-cloud-storage==2.17.0
