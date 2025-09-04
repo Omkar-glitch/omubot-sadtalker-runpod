@@ -12,7 +12,11 @@ def handler(event):
         inp = event.get("input", {})
         # Lightweight readiness/ping that avoids running a full job
         if inp.get("ping"):
-            return {"status": "ok", "engine": inp.get("driver", "sadtalker")}
+            return {
+                "status": "ok",
+                "engine": inp.get("driver", "sadtalker"),
+                "appVersion": os.getenv("APP_VERSION", "")
+            }
         driver = inp.get("driver", "sadtalker")
         image_url = inp.get("image_url")
         image_b64 = inp.get("image_b64")
