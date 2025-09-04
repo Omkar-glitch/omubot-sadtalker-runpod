@@ -10,6 +10,9 @@ from app.storage import maybe_upload
 def handler(event):
     try:
         inp = event.get("input", {})
+        # Lightweight readiness/ping that avoids running a full job
+        if inp.get("ping"):
+            return {"status": "ok", "engine": inp.get("driver", "sadtalker")}
         driver = inp.get("driver", "sadtalker")
         image_url = inp.get("image_url")
         image_b64 = inp.get("image_b64")
@@ -31,4 +34,3 @@ def handler(event):
 
 
 runpod.serverless.start({"handler": handler})
-
