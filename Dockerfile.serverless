@@ -1,0 +1,32 @@
+ARG BASE_IMAGE=nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu20.04
+FROM ${BASE_IMAGE}
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    SADTALKER_ROOT=/opt/SadTalker
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-pip python3-dev ffmpeg git curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Torch matching CUDA 11.7
+RUN pip3 install --upgrade pip && \
+    pip3 install torch==1.13.1+cu117 torchvision==0.14.1+cu117 --extra-index-url https://download.pytorch.org/whl/cu117
+
+WORKDIR /app
+COPY requirements.txt ./
+RUN pip3 install -r requirements.txt
+
+# Fetch SadTalker and weights
+RUN git clone --depth=1 https://github.com/OpenTalker/SadTalker.git ${SADTALKER_ROOT}
+WORKDIR ${SADTALKER_ROOT}
+RUN bash scripts/download_models.sh || true
+
+WORKDIR /app
+COPY app ./app
+COPY runpod_handler.py ./runpod_handler.py
+
+# Runpod serverless will invoke the handler
+CMD ["python3", "-u", "runpod_handler.py"]
+
