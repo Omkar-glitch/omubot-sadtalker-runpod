@@ -31,6 +31,19 @@ def handler(event):
             pipeline.load()
 
         video_path = pipeline.generate(image_path=image_path, audio_path=audio_path)
+
+        # If an upload_url is provided, PUT the file there (presigned URL), then return view_url
+        upload_url = inp.get("upload_url")
+        view_url = inp.get("view_url")
+        if upload_url:
+            import requests
+            with open(video_path, "rb") as f:
+                resp = requests.put(upload_url, data=f, headers={"Content-Type": inp.get("content_type", "video/mp4")}, timeout=600)
+                if resp.status_code not in (200, 201):
+                    return {"status": "error", "message": f"Upload failed: {resp.status_code} {resp.text[:200]}"}
+            return {"status": "completed", "video_url": view_url or video_path}
+
+        # Fallback: try provider-side upload if configured
         url = maybe_upload(video_path)
         return {"status": "completed", "video_url": url or video_path}
     except Exception as e:
