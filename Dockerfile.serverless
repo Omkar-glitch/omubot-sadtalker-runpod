@@ -8,6 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip python3-dev ffmpeg git curl ca-certificates && \
+    ln -sf /usr/bin/python3 /usr/bin/python && \
     rm -rf /var/lib/apt/lists/*
 
 # Torch matching CUDA 11.7
@@ -29,4 +30,3 @@ COPY runpod_handler.py ./runpod_handler.py
 
 # Runpod serverless will invoke the handler
 CMD ["python3", "-u", "runpod_handler.py"]
-
