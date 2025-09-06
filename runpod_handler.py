@@ -1,4 +1,6 @@
 import os
+import json
+import stat
 import traceback
 import runpod
 
@@ -8,6 +10,27 @@ from app.storage import maybe_upload
 
 
 def handler(event):
+    # Ensure GOOGLE_APPLICATION_CREDENTIALS exists if provided via env var GCP_SA_JSON
+    try:
+        creds_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "/tmp/gcp.json")
+        sa_json = os.getenv("GCP_SA_JSON")
+        if sa_json and creds_path and not os.path.isfile(creds_path):
+            # If value looks like a path to a secret file, do nothing. Otherwise write raw JSON
+            # Accept both raw JSON and base64 JSON strings
+            try:
+                # Try to parse as JSON to validate
+                obj = json.loads(sa_json)
+                data = json.dumps(obj).encode("utf-8")
+            except Exception:
+                # Fallback: treat as raw bytes
+                data = sa_json.encode("utf-8")
+            os.makedirs(os.path.dirname(creds_path), exist_ok=True)
+            with open(creds_path, "wb") as f:
+                f.write(data)
+            os.chmod(creds_path, stat.S_IRUSR | stat.S_IWUSR)
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = creds_path
+    except Exception:
+        pass
     try:
         inp = event.get("input", {})
         # Lightweight readiness/ping that avoids running a full job
