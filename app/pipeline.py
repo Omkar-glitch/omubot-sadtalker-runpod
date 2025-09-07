@@ -42,9 +42,9 @@ class SadTalkerPipeline(BasePipeline):
     def generate(self, image_path: str, audio_path: str) -> str:
         # Run SadTalker CLI and collect the produced mp4
         outdir = tempfile.mkdtemp(prefix="sadtalker_")
-        # Use current Python interpreter to avoid missing 'python' binary
+        # Use absolute interpreter; Runpod serverless images don't provide 'python'
         cmd = [
-            sys.executable, "inference.py",
+            "/usr/bin/python3", "inference.py",
             "--driven_audio", audio_path,
             "--source_image", image_path,
             "--result_dir", outdir,
