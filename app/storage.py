@@ -1,10 +1,28 @@
 import os
 import time
+import json
+import base64
 from typing import Optional, Tuple
 
 
 def _gcs_client():
     from google.cloud import storage  # lazy import
+    from google.oauth2 import service_account
+
+    sa_json = os.getenv("GCP_SA_JSON")
+    if sa_json:
+        try:
+            info = json.loads(sa_json)
+        except Exception:
+            try:
+                info = json.loads(base64.b64decode(sa_json).decode("utf-8"))
+            except Exception:
+                info = None
+        if info:
+            creds = service_account.Credentials.from_service_account_info(info)
+            project = info.get("project_id")
+            return storage.Client(project=project, credentials=creds)
+    # Fallback to default (uses GOOGLE_APPLICATION_CREDENTIALS or metadata)
     return storage.Client()
 
 
@@ -44,4 +62,3 @@ def maybe_upload(local_path: str) -> Optional[str]:
         return url
     # no upload; return None to let caller decide what to return
     return None
-
