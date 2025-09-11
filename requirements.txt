@@ -2,8 +2,8 @@ fastapi==0.112.0
 uvicorn[standard]==0.30.3
 pydantic==2.8.2
 requests==2.32.3
-# Python 3.8 in CUDA 11.7 base → NumPy 1.24.x
-numpy==1.24.4
+# NumPy pinned for SadTalker compat (avoids np.float removal)
+numpy==1.23.5
 Pillow==10.4.0
 opencv-python-headless==4.10.0.84
 ffmpeg-python==0.2.0
