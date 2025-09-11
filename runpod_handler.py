@@ -8,6 +8,24 @@ from app.utils import fetch_to_file
 from app.pipeline import get_pipeline
 from app.storage import maybe_upload
 
+LEGACY_EPOCH_URL = "https://github.com/Winfredy/SadTalker/releases/download/v0.0.2/epoch_20.pth"
+LEGACY_EPOCH_PATH = "/opt/SadTalker/checkpoints/epoch_20.pth"
+
+def ensure_legacy_checkpoint():
+    try:
+        ckpt_dir = os.path.dirname(LEGACY_EPOCH_PATH)
+        if not os.path.isfile(LEGACY_EPOCH_PATH):
+            os.makedirs(ckpt_dir, exist_ok=True)
+            import requests
+            r = requests.get(LEGACY_EPOCH_URL, stream=True, timeout=300)
+            r.raise_for_status()
+            with open(LEGACY_EPOCH_PATH, "wb") as f:
+                for chunk in r.iter_content(chunk_size=1024 * 1024):
+                    if chunk:
+                        f.write(chunk)
+    except Exception:
+        # Best-effort; SadTalker may use safetensors path instead
+        pass
 
 def handler(event):
     # Ensure GOOGLE_APPLICATION_CREDENTIALS exists if provided via env var GCP_SA_JSON
@@ -52,6 +70,9 @@ def handler(event):
         pipeline = get_pipeline(driver)
         if not pipeline.initialized:
             pipeline.load()
+
+        # Ensure legacy model exists if SadTalker falls back to old checkpoints
+        ensure_legacy_checkpoint()
 
         video_path = pipeline.generate(image_path=image_path, audio_path=audio_path)
 
