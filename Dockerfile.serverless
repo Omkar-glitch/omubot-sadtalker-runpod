@@ -23,6 +23,10 @@ RUN pip3 install -r requirements.txt
 RUN git clone --depth=1 https://github.com/OpenTalker/SadTalker.git ${SADTALKER_ROOT}
 WORKDIR ${SADTALKER_ROOT}
 RUN bash scripts/download_models.sh || true
+## Ensure legacy 3DMM recon model exists for old checkpoint path
+RUN mkdir -p ${SADTALKER_ROOT}/checkpoints && \
+    wget -nc https://github.com/Winfredy/SadTalker/releases/download/v0.0.2/epoch_20.pth \
+      -O ${SADTALKER_ROOT}/checkpoints/epoch_20.pth || true
 
 WORKDIR /app
 COPY app ./app
