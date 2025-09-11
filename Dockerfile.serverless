@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     SADTALKER_ROOT=/opt/SadTalker
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3-pip python3-dev ffmpeg git curl ca-certificates && \
+    python3-pip python3-dev ffmpeg git curl wget ca-certificates && \
     ln -sf /usr/bin/python3 /usr/bin/python && \
     rm -rf /var/lib/apt/lists/*
 
