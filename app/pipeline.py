@@ -48,10 +48,28 @@ class SadTalkerPipeline(BasePipeline):
             "--driven_audio", audio_path,
             "--source_image", image_path,
             "--result_dir", outdir,
-            "--still",
-            "--preprocess", "full",
-            "--enhancer", "gfpgan",
         ]
+        # Fast defaults; enable via env to keep compatibility with older SadTalker
+        # --still on by default
+        if os.getenv("SADTALKER_STILL", "1").lower() not in ("0", "false", "no"):
+            cmd.append("--still")
+        # Preprocess: crop is generally faster than full
+        _pre = (os.getenv("SADTALKER_PREPROCESS", "crop") or "").strip().lower()
+        if _pre not in ("full", "crop", "resize"):
+            _pre = "full" if not _pre else _pre
+        cmd.extend(["--preprocess", _pre])
+        # Optional: size (e.g., 256) — only pass if provided
+        _size = (os.getenv("SADTALKER_SIZE") or "").strip()
+        if _size:
+            cmd.extend(["--size", _size])
+        # Optional: fps (e.g., 20) — only pass if provided
+        _fps = (os.getenv("SADTALKER_FPS") or "").strip()
+        if _fps:
+            cmd.extend(["--fps", _fps])
+        # Enhancer: disabled by default (GFPGAN is slow). Only include if explicitly set
+        _enh = (os.getenv("SADTALKER_ENHANCER", "none") or "").strip().lower()
+        if _enh and _enh not in ("none",):
+            cmd.extend(["--enhancer", _enh])
         subprocess.run(cmd, cwd=self.root, check=True)
         videos = glob.glob(os.path.join(outdir, "**", "*.mp4"), recursive=True)
         if not videos:

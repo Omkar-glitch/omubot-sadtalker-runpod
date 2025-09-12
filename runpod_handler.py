@@ -11,6 +11,9 @@ from app.storage import maybe_upload
 LEGACY_EPOCH_URL = "https://github.com/Winfredy/SadTalker/releases/download/v0.0.2/epoch_20.pth"
 LEGACY_EPOCH_PATH = "/opt/SadTalker/checkpoints/epoch_20.pth"
 
+# Cache pipelines across invocations (warm container) to avoid re-initialization cost
+_PIPELINES = {}
+
 def ensure_legacy_checkpoint():
     try:
         ckpt_dir = os.path.dirname(LEGACY_EPOCH_PATH)
@@ -52,7 +55,10 @@ def handler(event):
         image_path = fetch_to_file(url=image_url, b64=image_b64, suffix=".png")
         audio_path = fetch_to_file(url=audio_url, b64=audio_b64, suffix=".wav")
 
-        pipeline = get_pipeline(driver)
+        pipeline = _PIPELINES.get(driver)
+        if pipeline is None:
+            pipeline = get_pipeline(driver)
+            _PIPELINES[driver] = pipeline
         if not pipeline.initialized:
             pipeline.load()
 
