@@ -21,6 +21,7 @@ class SadTalkerPipeline(BasePipeline):
     def __init__(self, root: Optional[str] = None):
         super().__init__()
         self.root = root or os.environ.get("SADTALKER_ROOT", "/opt/SadTalker")
+        self._supports_fps = None  # lazy-detected CLI support
 
     def _ensure_models(self):
         ckpt = os.path.join(self.root, "checkpoints")
@@ -37,6 +38,17 @@ class SadTalkerPipeline(BasePipeline):
                 f"SadTalker root not found at {self.root}. Bake it into the image or mount it."
             )
         self._ensure_models()
+        # Detect once whether the CLI supports --fps to avoid runtime errors on older versions
+        try:
+            if self._supports_fps is None:
+                help_out = subprocess.run([
+                    "/usr/bin/python3", "inference.py", "-h"
+                ], cwd=self.root, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                htxt = (help_out.stdout or "") + "\n" + (help_out.stderr or "")
+                self._supports_fps = ("--fps" in htxt)
+        except Exception:
+            # If help probing fails, assume no support to be safe
+            self._supports_fps = False
         super().load()
 
     def generate(self, image_path: str, audio_path: str) -> str:
@@ -62,9 +74,9 @@ class SadTalkerPipeline(BasePipeline):
         _size = (os.getenv("SADTALKER_SIZE") or "").strip()
         if _size:
             cmd.extend(["--size", _size])
-        # Optional: fps (e.g., 20) — only pass if provided
+        # Optional: fps (e.g., 20) — only pass if provided AND CLI supports it
         _fps = (os.getenv("SADTALKER_FPS") or "").strip()
-        if _fps:
+        if _fps and (self._supports_fps is True):
             cmd.extend(["--fps", _fps])
         # Enhancer: disabled by default (GFPGAN is slow). Only include if explicitly set
         _enh = (os.getenv("SADTALKER_ENHANCER", "none") or "").strip().lower()
